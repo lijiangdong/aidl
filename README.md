@@ -1,2 +1,2 @@
 # aidl
-android ipc通信之AIDL
+android ipc机制之AIDL

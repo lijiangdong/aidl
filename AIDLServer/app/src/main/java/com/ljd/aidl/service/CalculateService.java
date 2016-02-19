@@ -23,12 +23,6 @@ public class CalculateService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-
-        //验证权限
-/*        if (checkCallingOrSelfPermission("com.ljd.aidl.permission.ACCESS_CALCULATE_SERVICE") == PackageManager.PERMISSION_DENIED) {
-            return null;
-        }*/
         return mBinder;
     }
-
 }

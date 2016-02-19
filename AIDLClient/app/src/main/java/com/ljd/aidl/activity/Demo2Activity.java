@@ -9,6 +9,10 @@ import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ljd.aidl.IComputerManager;
 import com.ljd.aidl.client.R;
@@ -16,8 +20,16 @@ import com.ljd.aidl.entity.ComputerEntity;
 
 import java.util.List;
 
-public class Demo2Activity extends AppCompatActivity {
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
+public class Demo2Activity extends AppCompatActivity{
+
+    @Bind(R.id.show_linear)
+    LinearLayout mShowLinear;
+
+    private boolean mIsBindService;
     private IComputerManager mRemoteComputerManager;
     private IBinder.DeathRecipient mDeathRecipient = new IBinder.DeathRecipient() {
         @Override
@@ -32,16 +44,11 @@ public class Demo2Activity extends AppCompatActivity {
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            IComputerManager computerManager = IComputerManager.Stub.asInterface(service);
-            mRemoteComputerManager = computerManager;
+            mIsBindService = true;
+            Toast.makeText(Demo2Activity.this,"bind service success",Toast.LENGTH_SHORT).show();
+            mRemoteComputerManager = IComputerManager.Stub.asInterface(service);
             try {
                 mRemoteComputerManager.asBinder().linkToDeath(mDeathRecipient,0);
-                List<ComputerEntity> computerList = computerManager.getComputerList();
-                for (int i =0;i<computerList.size();i++){
-                    Log.d("brand",computerList.get(i).brand);
-                    Log.d("model",computerList.get(i).model);
-                    Log.d("computerId",String.valueOf(computerList.get(i).computerId));
-                }
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -56,18 +63,61 @@ public class Demo2Activity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo2);
-        bindService();
+        ButterKnife.bind(this);
+        mIsBindService = false;
     }
 
     @Override
     protected void onDestroy() {
-        unbindService(mConnection);
+        unbindService();
+        ButterKnife.unbind(this);
         super.onDestroy();
+    }
+
+    @OnClick({R.id.bind_demo2_btn,R.id.unbind_demo2_btn,R.id.test_demo2_btn,R.id.clear_demo2_btn})
+    public void onClickButton(View v) {
+        switch (v.getId()){
+            case R.id.bind_demo2_btn:
+                bindService();
+                break;
+            case R.id.unbind_demo2_btn:
+                unbindService();
+                break;
+            case R.id.test_demo2_btn:
+                if (!mIsBindService || mRemoteComputerManager == null){
+                    Toast.makeText(this,"not bind service",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                try {
+                    List<ComputerEntity> computerList = mRemoteComputerManager.getComputerList();
+                    for (int i =0;i<computerList.size();i++){
+                        String str = "computerId:" + String.valueOf(computerList.get(i).computerId) +
+                                " brand:" + computerList.get(i).brand +
+                                " model:" + computerList.get(i).model ;
+                        TextView textView = new TextView(this);
+                        textView.setText(str);
+                        mShowLinear.addView(textView);
+                    }
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.clear_demo2_btn:
+                mShowLinear.removeAllViews();
+                break;
+        }
     }
 
     private void bindService(){
         Intent intent = new Intent();
         intent.setAction("com.ljd.aidl.action.COMPUTER_SERVICE");
-        bindService(intent,mConnection, Context.BIND_AUTO_CREATE);
+        mIsBindService = bindService(intent,mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void unbindService(){
+        if(mIsBindService){
+            mIsBindService = false;
+            unbindService(mConnection);
+        }
     }
 }

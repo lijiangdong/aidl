@@ -2,8 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ljd.aidl">
 
-    <permission android:name="com.ljd.aidl.permission.ACCESS_CALCULATE_SERVICE"
-        android:protectionLevel="signatureOrSystem"/>
+    <permission
+        android:name="com.ljd.aidl.permission.ACCESS_CALCULATE_SERVICE"
+        android:protectionLevel="signatureOrSystem" />
 
     <application
         android:allowBackup="true"
@@ -11,10 +12,23 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service
-            android:name=".service.CalculateService">
+        <service android:name=".service.CalculateService">
             <intent-filter>
                 <action android:name="com.ljd.aidl.action.CALCULATE_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+
+        <service android:name=".service.ComputerObserverService" >
+            <intent-filter>
+                <action android:name="com.ljd.aidl.action.COMPUTER_OBSERVER_SERVICE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </service>
+
+        <service android:name=".service.ComputerService">
+            <intent-filter>
+                <action android:name="com.ljd.aidl.action.COMPUTER_SERVICE"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </service>

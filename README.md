@@ -1,2 +1,2 @@
-# aidl
-android ipc机制之AIDL
+# AIDL
+android ipc机制之AIDL的使用方法

@@ -10,7 +10,10 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ljd.aidl.IComputerManagerObserver;
 import com.ljd.aidl.IOnComputerArrivedListener;
@@ -19,9 +22,16 @@ import com.ljd.aidl.entity.ComputerEntity;
 
 import java.util.List;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 public class Demo3Activity extends AppCompatActivity {
 
+    @Bind(R.id.show_demo3_linear)
+    LinearLayout mShowLinear;
 
+    private boolean mIsBindService;
     private static final int MESSAGE_COMPUTER_ARRIVED = 1;
 
     private IComputerManagerObserver mRemoteComputerManager;
@@ -30,7 +40,13 @@ public class Demo3Activity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case MESSAGE_COMPUTER_ARRIVED:
-                    Log.d("receive computer :",msg.obj+"");
+                    ComputerEntity computer = (ComputerEntity)msg.obj;
+                    String str = "computerId:" + String.valueOf(computer.computerId) +
+                            " brand:" + computer.brand +
+                            " model:" + computer.model ;
+                    TextView textView = new TextView(Demo3Activity.this);
+                    textView.setText(str);
+                    mShowLinear.addView(textView);
                     break;
                 default:
                     super.handleMessage(msg);
@@ -50,28 +66,15 @@ public class Demo3Activity extends AppCompatActivity {
             }
         }
     };
+
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            IComputerManagerObserver computerManager = IComputerManagerObserver.Stub.asInterface(service);
-            mRemoteComputerManager = computerManager;
+            mIsBindService = true;
+            Toast.makeText(Demo3Activity.this,"bind service success",Toast.LENGTH_SHORT).show();
+            mRemoteComputerManager = IComputerManagerObserver.Stub.asInterface(service);
             try {
                 mRemoteComputerManager.asBinder().linkToDeath(mDeathRecipient,0);
-                List<ComputerEntity> computerList = computerManager.getComputerList();
-                for (int i =0;i<computerList.size();i++){
-                    Log.d("brand",computerList.get(i).brand);
-                    Log.d("model",computerList.get(i).model);
-                    Log.d("computerId",String.valueOf(computerList.get(i).computerId));
-                }
-                ComputerEntity computer = new ComputerEntity(3,"hp","envy13");
-                computerManager.addComputer(computer);
-                List<ComputerEntity> newList = computerManager.getComputerList();
-                for (int i =0;i<newList.size();i++){
-                    Log.d("brand",newList.get(i).brand);
-                    Log.d("model",newList.get(i).model);
-                    Log.d("computerId",String.valueOf(newList.get(i).computerId));
-                }
-                computerManager.registerUser(mOnComputerArrivedListener);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -87,7 +90,7 @@ public class Demo3Activity extends AppCompatActivity {
 
         @Override
         public void onComputerArrived(ComputerEntity computer) throws RemoteException {
-            mHandler.obtainMessage(MESSAGE_COMPUTER_ARRIVED,computer.model).sendToTarget();
+            mHandler.obtainMessage(MESSAGE_COMPUTER_ARRIVED,computer).sendToTarget();
         }
     };
 
@@ -95,11 +98,66 @@ public class Demo3Activity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo3);
-        bindService();
+        ButterKnife.bind(this);
+        mIsBindService = false;
     }
 
     @Override
     protected void onDestroy() {
+        unbindService();
+        ButterKnife.unbind(this);
+        super.onDestroy();
+    }
+
+    @OnClick({R.id.bind_demo3_btn,R.id.unbind_demo3_btn,R.id.test_demo3_btn,R.id.clear_demo3_btn})
+    public void onClickButton(View v){
+        switch (v.getId()){
+            case R.id.bind_demo3_btn:
+                bindService();
+                break;
+            case R.id.unbind_demo3_btn:
+                Toast.makeText(this,"unbind service success",Toast.LENGTH_SHORT).show();
+                unbindService();
+                break;
+            case R.id.test_demo3_btn:
+                if (!mIsBindService || mRemoteComputerManager == null){
+                    Toast.makeText(this,"not bind service",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    ComputerEntity computer = new ComputerEntity(3,"hp","envy13");
+                    mRemoteComputerManager.addComputer(computer);
+                    List<ComputerEntity> computerList = mRemoteComputerManager.getComputerList();
+                    for (int i =0;i<computerList.size();i++){
+                        String str = "computerId:" + String.valueOf(computerList.get(i).computerId) +
+                                " brand:" + computerList.get(i).brand +
+                                " model:" + computerList.get(i).model ;
+                        TextView textView = new TextView(this);
+                        textView.setText(str);
+                        mShowLinear.addView(textView);
+                    }
+                    mRemoteComputerManager.registerUser(mOnComputerArrivedListener);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.clear_demo3_btn:
+                mShowLinear.removeAllViews();
+                break;
+        }
+    }
+
+    private void bindService(){
+        Intent intent = new Intent();
+        intent.setAction("com.ljd.aidl.action.COMPUTER_OBSERVER_SERVICE");
+        mIsBindService = bindService(intent,mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void unbindService(){
+        if(!mIsBindService){
+            return;
+        }
         if (mRemoteComputerManager != null && mRemoteComputerManager.asBinder().isBinderAlive()){
             try {
                 mRemoteComputerManager.unRegisterUser(mOnComputerArrivedListener);
@@ -108,12 +166,6 @@ public class Demo3Activity extends AppCompatActivity {
             }
         }
         unbindService(mConnection);
-        super.onDestroy();
-    }
-
-    private void bindService(){
-        Intent intent = new Intent();
-        intent.setAction("com.ljd.aidl.action.COMPUTER_OBSERVER_SERVICE");
-        bindService(intent,mConnection, Context.BIND_AUTO_CREATE);
+        mIsBindService = false;
     }
 }

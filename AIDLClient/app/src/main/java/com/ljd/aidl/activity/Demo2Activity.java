@@ -81,6 +81,7 @@ public class Demo2Activity extends AppCompatActivity{
                 bindService();
                 break;
             case R.id.unbind_demo2_btn:
+                Toast.makeText(this,"unbind service success",Toast.LENGTH_SHORT).show();
                 unbindService();
                 break;
             case R.id.test_demo2_btn:
@@ -115,9 +116,10 @@ public class Demo2Activity extends AppCompatActivity{
     }
 
     private void unbindService(){
-        if(mIsBindService){
-            mIsBindService = false;
-            unbindService(mConnection);
+        if(!mIsBindService){
+            return;
         }
+        mIsBindService = false;
+        unbindService(mConnection);
     }
 }

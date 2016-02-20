@@ -58,7 +58,7 @@ public class ComputerObserverService extends Service{
                 while (!mIsServiceDestroy.get()){
                     try {
                         Thread.currentThread().sleep(3000);
-                        ComputerEntity computer = new ComputerEntity(mComputerList.size()+1,"apple","macbookpro");
+                        ComputerEntity computer = new ComputerEntity(mComputerList.size(),"******","******");
                         mComputerList.add(computer);
                         final int COUNT = mComputerArrivedListenerList.beginBroadcast();
                         //通知所有注册过的用户

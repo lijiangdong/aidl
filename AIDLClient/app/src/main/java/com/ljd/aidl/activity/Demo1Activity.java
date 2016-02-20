@@ -1,6 +1,5 @@
 package com.ljd.aidl.activity;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -38,6 +37,7 @@ public class Demo1Activity extends AppCompatActivity {
             bindService();
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +60,7 @@ public class Demo1Activity extends AppCompatActivity {
                 bindService();
                 break;
             case R.id.unbind_demo1_btn:
+                Toast.makeText(this,"unbind service success",Toast.LENGTH_SHORT).show();
                 unbindService();
                 break;
             case R.id.calculate_btn:

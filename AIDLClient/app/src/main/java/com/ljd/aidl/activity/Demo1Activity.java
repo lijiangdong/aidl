@@ -34,6 +34,7 @@ public class Demo1Activity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            //重新绑定Service防止系统将服务进程杀死而产生的调用错误。
             bindService();
         }
     };

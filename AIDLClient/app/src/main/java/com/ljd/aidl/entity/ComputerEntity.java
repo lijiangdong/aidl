@@ -8,9 +8,9 @@ import android.os.Parcelable;
  */
 public class ComputerEntity implements Parcelable{
 
-    public int computerId;
-    public String brand;
-    public String model;
+    public int computerId;     //id
+    public String brand;       //品牌
+    public String model;       //型号
 
     public ComputerEntity(int computerId, String brand, String model) {
         this.brand = brand;
